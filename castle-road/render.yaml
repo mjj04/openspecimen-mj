@@ -1,12 +1,18 @@
+# Castle Road on Render.
+# Blueprints are read from render.yaml at the REPOSITORY ROOT — copy this file
+# there to use New → Blueprint, or just create the service by hand with the
+# same four settings (root directory, build command, start command, branch).
 services:
   - type: web
     name: castle-road
     runtime: node
     plan: free
     rootDir: castle-road
-    buildCommand: ""
+    branch: claude/digital-board-game-online-k7pdnp
+    buildCommand: npm install
     startCommand: node server.js
     healthCheckPath: /health
+    autoDeploy: true
     envVars:
       - key: NODE_VERSION
         value: "20"
