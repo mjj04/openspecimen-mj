@@ -1,0 +1,953 @@
+<title>Castle Road</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Karla:wght@400;600;700&display=swap">
+<style>
+  :root{
+    --paper:#F7F3E9;
+    --paper-2:#FFFDF6;
+    --rule:#D9D0BA;
+    --pencil:#A79E88;
+    --ink:#1F2A44;
+    --ink-soft:#5D6679;
+    --biro:#2E4E96;
+    --felt:#D23A2E;
+    --gold:#B98722;
+    --moss:#3E7D53;
+    --plum:#7A4A86;
+    --shadow:rgba(31,42,68,.16);
+    --tape:rgba(203,190,150,.55);
+    --font-hand:"Patrick Hand","Bradley Hand","Comic Sans MS",cursive;
+    --font-ui:"Karla","Helvetica Neue",Arial,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#161920;
+      --paper-2:#1F242D;
+      --rule:#333B49;
+      --pencil:#79808F;
+      --ink:#EDE7D9;
+      --ink-soft:#A2AAB8;
+      --biro:#89AEFF;
+      --felt:#FF6E5C;
+      --gold:#E4B75C;
+      --moss:#6FC38D;
+      --plum:#C08FD0;
+      --shadow:rgba(0,0,0,.55);
+      --tape:rgba(120,110,80,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#161920;
+    --paper-2:#1F242D;
+    --rule:#333B49;
+    --pencil:#79808F;
+    --ink:#EDE7D9;
+    --ink-soft:#A2AAB8;
+    --biro:#89AEFF;
+    --felt:#FF6E5C;
+    --gold:#E4B75C;
+    --moss:#6FC38D;
+    --plum:#C08FD0;
+    --shadow:rgba(0,0,0,.55);
+    --tape:rgba(120,110,80,.4);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--font-ui); font-size:15px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1320px; margin:0 auto; padding:18px 18px 40px}
+
+  header.top{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:14px}
+  h1{
+    font-family:var(--font-hand); font-weight:400; margin:0;
+    font-size:clamp(34px,5vw,52px); line-height:.95; letter-spacing:.5px;
+    text-wrap:balance;
+  }
+  h1 .flag{color:var(--felt)}
+  .sub{margin:4px 0 0; color:var(--ink-soft); font-size:14px; max-width:52ch}
+  .top-actions{display:flex; gap:8px; flex-wrap:wrap}
+
+  button{font-family:var(--font-ui); font-size:14px; cursor:pointer}
+  .btn{
+    border:1.5px solid var(--ink); background:var(--paper-2); color:var(--ink);
+    padding:7px 13px; border-radius:9px 11px 10px 12px; font-weight:600;
+    box-shadow:1.5px 2px 0 var(--shadow); transition:transform .08s ease, box-shadow .08s ease;
+  }
+  .btn:hover{transform:translate(-1px,-1px); box-shadow:2.5px 3px 0 var(--shadow)}
+  .btn:active{transform:translate(1px,1px); box-shadow:0 0 0 var(--shadow)}
+  .btn:focus-visible{outline:2.5px solid var(--biro); outline-offset:2px}
+  .btn.quiet{border-color:var(--pencil); color:var(--ink-soft); box-shadow:none; background:transparent}
+  .btn.big{
+    font-size:19px; padding:14px 18px; width:100%; background:var(--felt); color:#fff;
+    border-color:color-mix(in srgb, var(--felt) 70%, #000); font-family:var(--font-hand); letter-spacing:.6px;
+  }
+  .btn.big:disabled{background:transparent; color:var(--pencil); border-color:var(--rule); box-shadow:none; cursor:not-allowed; transform:none}
+
+  main{display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:20px; align-items:start}
+  @media (max-width:960px){ main{grid-template-columns:minmax(0,1fr)} }
+
+  .sheet{
+    background:var(--paper-2); border:1px solid var(--rule); border-radius:4px;
+    box-shadow:0 10px 30px -18px var(--shadow), 0 1px 0 var(--rule);
+    padding:8px; position:relative; overflow:hidden;
+  }
+  .sheet::before{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(120% 90% at 10% 0%, transparent 55%, var(--shadow) 160%);
+    opacity:.35;
+  }
+  svg#board{display:block; width:100%; height:auto}
+
+  .rail{display:flex; flex-direction:column; gap:14px; position:sticky; top:14px}
+  @media (max-width:960px){ .rail{position:static} }
+  .card{
+    background:var(--paper-2); border:1px solid var(--rule); border-radius:3px;
+    padding:13px 14px; box-shadow:0 8px 22px -18px var(--shadow);
+  }
+  .card > h2{
+    font-family:var(--font-ui); font-size:11px; letter-spacing:.13em; text-transform:uppercase;
+    color:var(--pencil); margin:0 0 10px; font-weight:700;
+  }
+
+  .turn{font-family:var(--font-hand); font-size:26px; line-height:1.15; margin:0 0 10px}
+  .turn small{display:block; font-family:var(--font-ui); font-size:12.5px; color:var(--ink-soft); letter-spacing:.02em}
+
+  .dice{display:flex; gap:10px; justify-content:center; margin:2px 0 12px}
+  .die{width:52px; height:52px; border-radius:10px; border:2px solid var(--ink); background:var(--paper-2); box-shadow:2px 3px 0 var(--shadow)}
+  .die.rolling{animation:tumble .28s linear infinite}
+  @keyframes tumble{
+    0%{transform:rotate(0) translateY(0)} 25%{transform:rotate(9deg) translateY(-5px)}
+    50%{transform:rotate(-6deg) translateY(2px)} 75%{transform:rotate(5deg) translateY(-3px)} 100%{transform:rotate(0) translateY(0)}
+  }
+  .die circle{fill:var(--ink)}
+
+  ul.players{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:7px}
+  ul.players li{
+    display:flex; align-items:center; gap:9px; padding:6px 8px; border-radius:8px;
+    border:1.5px dashed transparent;
+  }
+  ul.players li.now{border-color:var(--ink); background:color-mix(in srgb, var(--gold) 12%, transparent)}
+  ul.players li.done{opacity:.72}
+  .pawn{
+    width:30px; height:30px; border-radius:50%; display:grid; place-items:center; font-size:16px;
+    border:2px solid var(--ink); flex:0 0 auto; box-shadow:1.5px 2px 0 var(--shadow);
+  }
+  .pname{font-weight:600; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .pname .you{font-weight:400; color:var(--pencil); font-size:12px}
+  .ppos{font-family:var(--font-hand); font-size:19px; color:var(--ink-soft); font-variant-numeric:tabular-nums}
+  .dot{width:7px; height:7px; border-radius:50%; background:var(--moss); flex:0 0 auto}
+  .dot.off{background:var(--rule)}
+
+  .log{
+    font-family:var(--font-hand); font-size:17px; line-height:26px;
+    background:
+      repeating-linear-gradient(to bottom, transparent 0 25px, var(--rule) 25px 26px);
+    max-height:220px; overflow-y:auto; padding-top:1px; margin:0; list-style:none;
+  }
+  .log li{padding:0 2px}
+  .log li b{color:var(--felt); font-weight:400}
+
+  footer.note{margin-top:20px; color:var(--pencil); font-size:12.5px; text-align:center}
+
+  dialog{
+    border:1px solid var(--rule); border-radius:6px; background:var(--paper-2); color:var(--ink);
+    padding:0; max-width:440px; width:calc(100vw - 32px); box-shadow:0 24px 60px -20px var(--shadow);
+  }
+  dialog::backdrop{background:rgba(20,22,28,.55)}
+  .dlg-in{padding:20px}
+  .dlg-in h3{font-family:var(--font-hand); font-size:28px; margin:0 0 4px; font-weight:400}
+  .dlg-in p{margin:0 0 14px; color:var(--ink-soft); font-size:13.5px}
+  label.fld{display:block; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--pencil); font-weight:700; margin-bottom:6px}
+  input[type=text]{
+    width:100%; font-family:var(--font-hand); font-size:22px; padding:8px 10px; color:var(--ink);
+    background:transparent; border:0; border-bottom:2px solid var(--ink); border-radius:0;
+  }
+  input[type=text]:focus{outline:none; border-bottom-color:var(--felt)}
+  .picker{display:flex; flex-wrap:wrap; gap:7px; margin-top:8px}
+  .pick{
+    width:40px; height:40px; border-radius:50%; border:2px solid var(--rule); background:var(--paper);
+    font-size:19px; display:grid; place-items:center; padding:0;
+  }
+  .pick[aria-pressed="true"]{border-color:var(--ink); box-shadow:0 0 0 3px color-mix(in srgb, var(--gold) 45%, transparent)}
+  .dlg-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:18px}
+  .rules{margin:0; padding:0; list-style:none; font-size:13.5px; display:flex; flex-direction:column; gap:8px; max-height:52vh; overflow-y:auto}
+  .rules li{display:flex; gap:10px; align-items:baseline}
+  .rules .sq{
+    font-family:var(--font-hand); font-size:16px; min-width:34px; text-align:center; padding:1px 4px;
+    border:1.5px solid var(--ink); border-radius:5px; flex:0 0 auto;
+  }
+  .banner{
+    display:none; font-family:var(--font-hand); font-size:22px; text-align:center;
+    padding:10px; border:2px dashed var(--felt); border-radius:10px; color:var(--felt); margin-bottom:12px;
+  }
+  .banner.show{display:block}
+  #confetti{position:fixed; inset:0; pointer-events:none; z-index:50}
+  .offline{font-size:12px; color:var(--pencil); text-align:center}
+  @media (prefers-reduced-motion: reduce){
+    .die.rolling{animation:none}
+    .btn{transition:none}
+  }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Castle&nbsp;Road <span class="flag">&#9873;</span></h1>
+      <p class="sub">A hand-drawn board game, brought online. Everyone opens this same page &mdash; you all see the same board, in real time.</p>
+    </div>
+    <div class="top-actions">
+      <button class="btn quiet" id="rulesBtn">Rules</button>
+      <button class="btn quiet" id="addBtn">Add player on this device</button>
+      <button class="btn quiet" id="newBtn">New game</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="sheet">
+      <svg id="board" viewBox="0 0 1200 900" role="img" aria-label="The Castle Road game board: a winding track of 35 spaces from Start to Finish">
+        <defs>
+          <filter id="wobble" x="-6%" y="-6%" width="112%" height="112%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.014" numOctaves="2" seed="11" result="noise"/>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+          </filter>
+          <filter id="pawnShadow" x="-40%" y="-40%" width="180%" height="180%">
+            <feDropShadow dx="2" dy="3" stdDeviation="2" flood-opacity="0.35"/>
+          </filter>
+        </defs>
+        <g id="roadLayer" filter="url(#wobble)">
+          <path id="roadInk" fill="none" stroke-linecap="round"/>
+          <path id="roadFill" fill="none" stroke-linecap="round"/>
+          <g id="dividers"></g>
+        </g>
+        <g id="marks"></g>
+        <g id="numbers"></g>
+        <g id="tokens"></g>
+      </svg>
+    </section>
+
+    <aside class="rail">
+      <div class="card">
+        <div class="banner" id="banner"></div>
+        <p class="turn" id="turnLine">Loading the board&hellip;<small id="turnSub">&nbsp;</small></p>
+        <div class="dice" id="diceBox">
+          <svg class="die" id="die1" viewBox="0 0 100 100"></svg>
+          <svg class="die" id="die2" viewBox="0 0 100 100"></svg>
+        </div>
+        <button class="btn big" id="rollBtn" disabled>Roll the dice</button>
+        <p class="offline" id="modeNote"></p>
+      </div>
+
+      <div class="card">
+        <h2>Who&rsquo;s playing</h2>
+        <ul class="players" id="playerList"></ul>
+      </div>
+
+      <div class="card">
+        <h2>What happened</h2>
+        <ul class="log" id="log"></ul>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="note">Made from a felt-tip original. Start &rarr; 35 spaces &rarr; Finish.</footer>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<dialog id="joinDlg">
+  <form method="dialog" class="dlg-in" id="joinForm">
+    <h3>Take a seat</h3>
+    <p>Pick a name and a piece. Anyone else with this link joins the same game.</p>
+    <label class="fld" for="nameIn">Your name</label>
+    <input type="text" id="nameIn" maxlength="16" autocomplete="off" placeholder="Grandpa" required>
+    <div class="picker" id="emojiPicker"></div>
+    <div class="dlg-actions">
+      <button class="btn quiet" value="cancel" formnovalidate type="submit">Just watch</button>
+      <button class="btn" id="joinGo" value="join" type="submit">Join the game</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="rulesDlg">
+  <div class="dlg-in">
+    <h3>How to play</h3>
+    <p>Roll two dice, move that many spaces, and do whatever your space says. First piece to reach Finish wins &mdash; you don&rsquo;t need an exact roll.</p>
+    <ul class="rules" id="rulesList"></ul>
+    <div class="dlg-actions"><button class="btn" id="rulesClose">Got it</button></div>
+  </div>
+</dialog>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- the board ---------- */
+  var FINISH = 36;                 // 0 = Start, 1..35 numbered, 36 = Finish
+  var COUNT  = FINISH + 1;
+
+  var SPECIALS = {
+    4:  {kind:"again",            mark:"AGAIN!", tone:"biro", desc:"Roll again"},
+    7:  {kind:"castle",           mark:"castle",     tone:"felt", desc:"The red castle — roll again"},
+    11: {kind:"plus",   n:3,      mark:"+3",         tone:"moss", desc:"Go on 3 spaces"},
+    13: {kind:"again",            mark:"AGAIN!", tone:"biro", desc:"Roll again"},
+    16: {kind:"goto",   n:20,     mark:"→20",   tone:"biro", desc:"Shortcut — go to space 20"},
+    18: {kind:"cuddle",           mark:"heart",      tone:"felt", desc:"Cuddle everyone!"},
+    20: {kind:"castle",           mark:"castle",     tone:"felt", desc:"The second castle — roll again"},
+    24: {kind:"back",   n:3,      mark:"−3",    tone:"plum", desc:"Go back 3 spaces"},
+    28: {kind:"fork",             mark:"✻",     tone:"gold", desc:"Crossroads — roll one die: 1-2 go on 1, 3-4 go on 3, 5-6 go on 5"},
+    32: {kind:"plus",   n:2,      mark:"+2",         tone:"moss", desc:"Go on 2 spaces"}
+  };
+
+  var WAY = [
+    [1108,102],[950,94],[790,110],[630,98],[470,112],[330,100],
+    [190,145],[128,235],[168,318],
+    [320,362],[480,352],[640,366],[800,356],[950,370],
+    [1080,415],[1128,505],[1078,592],
+    [930,632],[770,622],[610,636],[450,626],[300,640],
+    [168,678],[112,752],[158,802],
+    [310,838],[470,828],[630,842],[790,832],[950,846],[1105,838]
+  ];
+
+  var PIECES = [
+    {emoji:"🐢", color:"#3E7D53"}, {emoji:"🦊", color:"#D23A2E"},
+    {emoji:"🐸", color:"#2E4E96"}, {emoji:"🐝", color:"#B98722"},
+    {emoji:"🐙", color:"#7A4A86"}, {emoji:"🐧", color:"#2B7A87"},
+    {emoji:"🐌", color:"#8A5A2B"}, {emoji:"🦄", color:"#C05E9E"}
+  ];
+
+  var SVG_NS = "http://www.w3.org/2000/svg";
+  var HAND = '"Patrick Hand", "Bradley Hand", cursive';
+  var ROAD_W = 96;
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var svg = document.getElementById("board");
+  var roadInk = document.getElementById("roadInk");
+  var roadFill = document.getElementById("roadFill");
+  var centers = [];   // arc length of each space centre
+
+  function el(name, attrs, text){
+    var n = document.createElementNS(SVG_NS, name);
+    for (var k in attrs) if (attrs.hasOwnProperty(k)) n.setAttribute(k, attrs[k]);
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function smoothPath(pts){
+    var d = "M " + pts[0][0] + " " + pts[0][1];
+    for (var i=0;i<pts.length-1;i++){
+      var p0 = pts[i-1] || pts[i], p1 = pts[i], p2 = pts[i+1], p3 = pts[i+2] || pts[i+1];
+      var c1x = p1[0] + (p2[0]-p0[0])/6, c1y = p1[1] + (p2[1]-p0[1])/6;
+      var c2x = p2[0] - (p3[0]-p1[0])/6, c2y = p2[1] - (p3[1]-p1[1])/6;
+      d += " C " + c1x.toFixed(1) + " " + c1y.toFixed(1) + " " + c2x.toFixed(1) + " " + c2y.toFixed(1)
+             + " " + p2[0] + " " + p2[1];
+    }
+    return d;
+  }
+
+  function tone(name){
+    return getComputedStyle(document.documentElement).getPropertyValue("--" + name).trim() || "#000";
+  }
+  function at(len){ return roadInk.getPointAtLength(Math.max(0, Math.min(len, roadInk.getTotalLength()))); }
+  function angleAt(len){
+    var a = at(len-4), b = at(len+4);
+    var deg = Math.atan2(b.y-a.y, b.x-a.x) * 180/Math.PI;
+    if (deg > 90) deg -= 180;
+    if (deg < -90) deg += 180;
+    return deg;
+  }
+
+  function crown(x, y, fill, deg){
+    var g = el("g", {transform:"translate(" + x + "," + y + ") rotate(" + (-(deg||0)).toFixed(1) + ") scale(0.92)"});
+    g.appendChild(el("path", {
+      d:"M -22 8 L -22 -10 L -11 -1 L 0 -14 L 11 -1 L 22 -10 L 22 8 Z",
+      fill:"none", stroke:fill, "stroke-width":3.5, "stroke-linejoin":"round"
+    }));
+    g.appendChild(el("path", {d:"M -22 13 L 22 13", stroke:fill, "stroke-width":3.5, "stroke-linecap":"round"}));
+    return g;
+  }
+  function heart(x, y, fill, deg){
+    var g = el("g", {transform:"translate(" + x + "," + y + ") rotate(" + (-(deg||0)).toFixed(1) + ") scale(0.92)"});
+    g.appendChild(el("path", {
+      d:"M 0 12 C -18 0 -20 -12 -10 -14 C -4 -15 -1 -10 0 -8 C 1 -10 4 -15 10 -14 C 20 -12 18 0 0 12 Z",
+      fill:"none", stroke:fill, "stroke-width":3.2, "stroke-linejoin":"round"
+    }));
+    return g;
+  }
+
+  function drawBoard(){
+    var d = smoothPath(WAY);
+    roadInk.setAttribute("d", d);
+    roadFill.setAttribute("d", d);
+    roadInk.setAttribute("stroke", tone("ink"));
+    roadInk.setAttribute("stroke-width", ROAD_W + 6);
+    roadFill.setAttribute("stroke", tone("paper-2"));
+    roadFill.setAttribute("stroke-width", ROAD_W);
+
+    var L = roadInk.getTotalLength();
+    var step = L / COUNT;
+    var i;
+    for (i=0;i<COUNT;i++) centers[i] = (i + 0.5) * step;
+
+    var divs = document.getElementById("dividers");
+    var marks = document.getElementById("marks");
+    var nums  = document.getElementById("numbers");
+    divs.textContent = ""; marks.textContent = ""; nums.textContent = "";
+
+    for (i=1;i<COUNT;i++){
+      var l = i * step, p = at(l), a = angleAt(l) * Math.PI/180;
+      var nx = -Math.sin(a) * (ROAD_W/2 + 2), ny = Math.cos(a) * (ROAD_W/2 + 2);
+      divs.appendChild(el("line", {
+        x1:(p.x-nx).toFixed(1), y1:(p.y-ny).toFixed(1), x2:(p.x+nx).toFixed(1), y2:(p.y+ny).toFixed(1),
+        stroke:tone("ink"), "stroke-width":3, "stroke-linecap":"round"
+      }));
+    }
+
+    for (i=0;i<COUNT;i++){
+      var pt = at(centers[i]), deg = angleAt(centers[i]);
+      var g = el("g", {transform:"translate(" + pt.x.toFixed(1) + "," + pt.y.toFixed(1) + ") rotate(" + deg.toFixed(1) + ")"});
+
+      if (i === 0){
+        g.appendChild(el("text", {x:0, y:-6, "text-anchor":"middle", fill:tone("ink"),
+          "font-family":HAND, "font-size":25}, "START"));
+        g.appendChild(el("text", {x:0, y:22, "text-anchor":"middle", fill:tone("ink-soft"),
+          "font-family":HAND, "font-size":19}, "here"));
+      } else if (i === FINISH){
+        g.appendChild(el("text", {x:0, y:10, "text-anchor":"middle", fill:tone("felt"),
+          "font-family":HAND, "font-size":29}, "FINISH"));
+      } else {
+        var sp = SPECIALS[i];
+        if (sp){
+          if (sp.mark === "castle") g.appendChild(crown(0, -7, tone("felt"), deg));
+          else if (sp.mark === "heart") g.appendChild(heart(0, -7, tone("felt"), deg));
+          else g.appendChild(el("text", {x:0, y:1, "text-anchor":"middle", fill:tone(sp.tone),
+                "font-family":HAND, "font-size":(sp.mark.length > 4 ? 20 : 29)}, sp.mark));
+          g.appendChild(el("text", {x:0, y:33, "text-anchor":"middle", fill:tone("pencil"),
+            "font-family":HAND, "font-size":18}, String(i)));
+        } else {
+          g.appendChild(el("text", {x:0, y:12, "text-anchor":"middle", fill:tone("ink"),
+            "font-family":HAND, "font-size":32}, String(i)));
+        }
+      }
+      (i === 0 || i === FINISH || SPECIALS[i] ? marks : nums).appendChild(g);
+    }
+  }
+
+  /* ---------- game rules ---------- */
+  function d6(){ return 1 + Math.floor(Math.random()*6); }
+
+  function resolveTurn(from, dice){
+    var pos = Math.min(FINISH, from + dice[0] + dice[1]);
+    var steps = [pos], notes = [], again = false, seen = {}, hop;
+    for (hop=0; hop<4; hop++){
+      if (pos >= FINISH) break;
+      var sp = SPECIALS[pos];
+      if (!sp || seen[pos]) break;
+      seen[pos] = true;
+      if (sp.kind === "again" || sp.kind === "castle"){ again = true; notes.push(sp.desc); break; }
+      if (sp.kind === "cuddle"){ notes.push("Cuddle everyone!"); break; }
+      var np = pos;
+      if (sp.kind === "plus") np = pos + sp.n;
+      else if (sp.kind === "back") np = Math.max(0, pos - sp.n);
+      else if (sp.kind === "goto") np = sp.n;
+      else if (sp.kind === "fork"){
+        var r = d6();
+        np = pos + (r <= 2 ? 1 : (r <= 4 ? 3 : 5));
+        notes.push("Crossroads die: " + r + " — on " + (r<=2?1:(r<=4?3:5)));
+      }
+      if (sp.kind !== "fork") notes.push(sp.desc);
+      np = Math.max(0, Math.min(FINISH, np));
+      steps.push(np);
+      pos = np;
+    }
+    if (pos >= FINISH) again = false;
+    return {steps:steps, notes:notes, again:again, end:pos};
+  }
+
+  /* ---------- state plumbing ---------- */
+  var LS_ID = "castleroad.me", LS_MINE = "castleroad.mine";
+  var me = localStorage.getItem(LS_ID);
+  if (!me){ me = "u" + Math.random().toString(36).slice(2,10); try{ localStorage.setItem(LS_ID, me); }catch(e){} }
+  var mine = [];
+  try { mine = JSON.parse(localStorage.getItem(LS_MINE) || "[]") || []; } catch(e){ mine = []; }
+  function saveMine(){ try{ localStorage.setItem(LS_MINE, JSON.stringify(mine)); }catch(e){} }
+
+  var db = null, room = null, ref = null;
+  var state = null, seenSeq = -1, busy = false, online = {};
+
+  function freshState(){
+    return {players:[], turn:0, status:"lobby", seq:0, last:null, log:[], stamp:Date.now()};
+  }
+
+  function persist(next){
+    next.stamp = Date.now();
+    if (ref){
+      ref.set(next).catch(function(err){ note("Couldn't save that move (" + err.code + "). Try again."); });
+    } else {
+      try{ localStorage.setItem("castleroad.local", JSON.stringify(next)); }catch(e){}
+      onState(next);
+    }
+  }
+
+  function note(msg){ document.getElementById("modeNote").textContent = msg; }
+
+  /* ---------- rendering ---------- */
+  var display = {};          // playerId -> fractional space index actually drawn
+  var animating = false;
+
+  function playerById(id){
+    if (!state) return null;
+    for (var i=0;i<state.players.length;i++) if (state.players[i].id === id) return state.players[i];
+    return null;
+  }
+  function current(){ return state && state.players.length ? state.players[state.turn % state.players.length] : null; }
+  function isMine(p){ return p && mine.indexOf(p.id) !== -1; }
+
+  function lenFor(v){
+    var i = Math.max(0, Math.min(FINISH, Math.floor(v)));
+    var j = Math.min(FINISH, i + 1);
+    var f = Math.max(0, Math.min(1, v - i));
+    return centers[i] + (centers[j] - centers[i]) * f;
+  }
+
+  function drawTokens(){
+    var layer = document.getElementById("tokens");
+    layer.textContent = "";
+    if (!state) return;
+    var bySpace = {};
+    state.players.forEach(function(p){
+      var v = display[p.id];
+      if (v === undefined) v = p.pos;
+      var key = Math.round(v);
+      bySpace[key] = (bySpace[key] || 0) + 1;
+    });
+    var used = {};
+    state.players.forEach(function(p){
+      var v = display[p.id];
+      if (v === undefined) v = p.pos;
+      var key = Math.round(v);
+      var total = bySpace[key], idx = (used[key] = (used[key] || 0)) ; used[key]++;
+      var pt = at(lenFor(v));
+      var ox = 0, oy = 0;
+      if (total > 1){
+        var ang = (Math.PI*2 * idx/total) - Math.PI/2;
+        ox = Math.cos(ang) * 19; oy = Math.sin(ang) * 17;
+      }
+      var g = el("g", {transform:"translate(" + (pt.x+ox).toFixed(1) + "," + (pt.y+oy).toFixed(1) + ")",
+                       filter:"url(#pawnShadow)"});
+      g.appendChild(el("circle", {r:22, fill:safeColor(p.color), stroke:tone("ink"), "stroke-width":3}));
+      g.appendChild(el("text", {x:0, y:8, "text-anchor":"middle", "font-size":22}, p.emoji));
+      layer.appendChild(g);
+    });
+  }
+
+  function pip(svgEl, n){
+    svgEl.textContent = "";
+    var map = {1:[[50,50]], 2:[[28,28],[72,72]], 3:[[28,28],[50,50],[72,72]],
+               4:[[28,28],[72,28],[28,72],[72,72]], 5:[[28,28],[72,28],[50,50],[28,72],[72,72]],
+               6:[[28,25],[72,25],[28,50],[72,50],[28,75],[72,75]]};
+    (map[n] || []).forEach(function(c){ svgEl.appendChild(el("circle", {cx:c[0], cy:c[1], r:9})); });
+  }
+
+  function renderPanel(){
+    var list = document.getElementById("playerList");
+    list.textContent = "";
+    var cur = current();
+    if (!state || !state.players.length){
+      var li = document.createElement("li");
+      li.innerHTML = '<span class="pname" style="color:var(--pencil)">Nobody yet — take a seat.</span>';
+      list.appendChild(li);
+    } else {
+      state.players.forEach(function(p, i){
+        var li = document.createElement("li");
+        if (cur && p.id === cur.id && state.status === "playing") li.className = "now";
+        if (p.done) li.className += " done";
+        var pawn = document.createElement("span");
+        pawn.className = "pawn"; pawn.style.background = safeColor(p.color); pawn.textContent = p.emoji;
+        var nm = document.createElement("span");
+        nm.className = "pname";
+        nm.textContent = p.name;
+        if (isMine(p)){ var y = document.createElement("span"); y.className = "you"; y.textContent = " (you)"; nm.appendChild(y); }
+        var pos = document.createElement("span");
+        pos.className = "ppos";
+        pos.textContent = p.done ? ("🏁 " + (p.rank === 1 ? "1st" : p.rank + "th")) : (p.pos === 0 ? "start" : p.pos);
+        var dot = document.createElement("span");
+        dot.className = "dot" + (online[p.id] || isMine(p) ? "" : " off");
+        dot.title = (online[p.id] || isMine(p)) ? "here now" : "not on the page";
+        li.appendChild(pawn); li.appendChild(nm); li.appendChild(pos); li.appendChild(dot);
+        list.appendChild(li);
+      });
+    }
+
+    var logEl = document.getElementById("log");
+    logEl.textContent = "";
+    ((state && state.log) || []).slice(-14).forEach(function(entry){
+      var li = document.createElement("li");
+      li.innerHTML = entry;
+      logEl.appendChild(li);
+    });
+    logEl.scrollTop = logEl.scrollHeight;
+
+    var turnLine = document.getElementById("turnLine");
+    var sub = document.createElement("small");
+    var roll = document.getElementById("rollBtn");
+    var banner = document.getElementById("banner");
+    banner.className = "banner";
+
+    if (!state || !state.players.length){
+      turnLine.textContent = "Waiting for players";
+      sub.textContent = "Share this page with everyone who wants to play.";
+      roll.disabled = true; roll.textContent = "Roll the dice";
+    } else if (state.status === "done"){
+      var w = playerById(state.winner);
+      turnLine.textContent = "🏁 " + (w ? w.name : "Somebody") + " wins!";
+      sub.textContent = "Start a new game whenever you like.";
+      banner.textContent = (w ? w.emoji + " " + w.name : "") + " reached the finish!";
+      banner.className = "banner show";
+      roll.disabled = true; roll.textContent = "Game over";
+    } else if (state.status === "lobby"){
+      turnLine.textContent = "Ready when you are";
+      sub.textContent = state.players.length < 2 ? "One more player would be good." : state.players.length + " players in.";
+      roll.disabled = animating || busy || !mine.length;
+      roll.textContent = "Start the game";
+    } else if (cur){
+      var yours = isMine(cur);
+      turnLine.textContent = yours ? "Your turn, " + cur.name : cur.name + "’s turn";
+      sub.textContent = yours ? "Roll and move." : "Waiting for " + cur.name + " to roll…";
+      roll.disabled = !yours || animating || busy;
+      roll.textContent = yours ? "Roll the dice" : "Waiting…";
+    }
+    turnLine.appendChild(sub);
+
+    var dice = (state && state.last && state.last.dice) || [1,1];
+    pip(document.getElementById("die1"), dice[0]);
+    pip(document.getElementById("die2"), dice[1]);
+    drawTokens();
+  }
+
+  /* ---------- movement animation ---------- */
+  function ease(t){ return t<0.5 ? 2*t*t : -1+(4-2*t)*t; }
+
+  function glide(pid, from, to, dur){
+    return new Promise(function(done){
+      if (reduce || dur <= 0){ display[pid] = to; drawTokens(); done(); return; }
+      var t0 = performance.now();
+      function frame(now){
+        var k = Math.min(1, (now - t0)/dur);
+        display[pid] = from + (to - from) * ease(k);
+        drawTokens();
+        if (k < 1) requestAnimationFrame(frame); else { display[pid] = to; drawTokens(); done(); }
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+
+  function walk(pid, from, to){
+    var seq = Promise.resolve();
+    if (to === from) return glide(pid, from, to, 0);
+    var dir = to > from ? 1 : -1;
+    var per = Math.max(90, Math.min(210, 1400/Math.max(1, Math.abs(to-from))));
+    for (var s = from + dir; ; s += dir){
+      (function(target){ seq = seq.then(function(){ return glide(pid, target - dir, target, per); }); })(s);
+      if (s === to) break;
+      if (Math.abs(s - from) > 40) break;
+    }
+    return seq;
+  }
+
+  function playAction(act){
+    animating = true;
+    renderPanel();
+    var pid = act.playerId;
+    var rollMs = reduce ? 0 : 620;
+    document.getElementById("die1").classList.add("rolling");
+    document.getElementById("die2").classList.add("rolling");
+    return new Promise(function(r){ setTimeout(r, rollMs); }).then(function(){
+      document.getElementById("die1").classList.remove("rolling");
+      document.getElementById("die2").classList.remove("rolling");
+      pip(document.getElementById("die1"), act.dice[0]);
+      pip(document.getElementById("die2"), act.dice[1]);
+      var chain = Promise.resolve();
+      var prev = act.from;
+      act.steps.forEach(function(target, i){
+        (function(p, t, jump){
+          chain = chain.then(function(){
+            return jump ? glide(pid, p, t, 620) : walk(pid, p, t);
+          });
+        })(prev, target, i > 0);
+        prev = target;
+      });
+      return chain;
+    }).then(function(){
+      animating = false;
+      renderPanel();
+      if (state && state.status === "done") celebrate();
+    });
+  }
+
+  /* ---------- turns ---------- */
+  function nextTurnIndex(s, fromIdx){
+    for (var k=1; k<=s.players.length; k++){
+      var i = (fromIdx + k) % s.players.length;
+      if (!s.players[i].done) return i;
+    }
+    return fromIdx;
+  }
+
+  function takeTurn(){
+    if (!state || busy || animating) return;
+    if (state.status === "lobby"){
+      if (!state.players.length) return;
+      var s0 = clone(state);
+      s0.status = "playing"; s0.turn = 0; s0.seq++;
+      s0.log = (s0.log || []).concat(["<b>Off we go!</b> " + esc(s0.players[0].name) + " starts."]);
+      busy = true; persist(s0); busy = false;
+      return;
+    }
+    var cur = current();
+    if (!cur || !isMine(cur)) return;
+
+    var dice = [d6(), d6()];
+    var out = resolveTurn(cur.pos, dice);
+    var s = clone(state);
+    var idx = s.turn % s.players.length;
+    var p = s.players[idx];
+    p.pos = out.end;
+
+    var line = "<b>" + esc(p.name) + "</b> rolled " + dice[0] + " + " + dice[1] + " = " + (dice[0]+dice[1]);
+    var logs = [line + (out.end >= FINISH ? " — and reaches the Finish!" : " — to space " + out.end)];
+    out.notes.forEach(function(n){ logs.push("&nbsp;&nbsp;↳ " + esc(n)); });
+
+    if (out.end >= FINISH){
+      p.done = true;
+      p.rank = s.players.filter(function(q){ return q.done; }).length;
+      if (p.rank === 1){ s.status = "done"; s.winner = p.id; logs.push("<b>" + esc(p.name) + " wins Castle Road!</b>"); }
+    }
+    if (s.status !== "done") s.turn = out.again && !p.done ? idx : nextTurnIndex(s, idx);
+    if (out.again && !p.done) logs.push("&nbsp;&nbsp;↳ " + esc(p.name) + " goes again.");
+
+    s.seq++;
+    s.last = {playerId:p.id, dice:dice, from:cur.pos, steps:out.steps, at:Date.now()};
+    s.log = (s.log || []).concat(logs).slice(-60);
+    busy = true;
+    persist(s);
+    busy = false;
+  }
+
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+
+  function esc(t){
+    return String(t == null ? "" : t).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function safeColor(c){ return /^#[0-9a-fA-F]{6}$/.test(String(c)) ? c : "#5D6679"; }
+
+  /* ---------- joining ---------- */
+  function nextPiece(players){
+    for (var i=0;i<PIECES.length;i++){
+      var taken = players.some(function(p){ return p.emoji === PIECES[i].emoji; });
+      if (!taken) return PIECES[i];
+    }
+    return PIECES[players.length % PIECES.length];
+  }
+
+  function addPlayer(name, piece){
+    function build(s){
+      var pl = {
+        id: "p" + Math.random().toString(36).slice(2,9),
+        name: name, emoji: piece.emoji, color: piece.color, pos: 0, done: false, rank: 0, owner: me
+      };
+      s.players = (s.players || []).concat([pl]);
+      s.seq++;
+      s.log = (s.log || []).concat(["<b>" + esc(name) + "</b> " + esc(piece.emoji) + " sat down."]).slice(-60);
+      mine.push(pl.id); saveMine();
+      return s;
+    }
+    if (!ref){ persist(build(clone(state || freshState()))); return; }
+    ref.acquire({holder: me, ttlMs: 4000}).then(function(res){
+      if (!res.acquired){ setTimeout(function(){ addPlayer(name, piece); }, 700); return; }
+      return ref.get().then(function(snap){
+        var s = snap.exists ? snap.data() : freshState();
+        persist(build(s));
+      });
+    }).catch(function(){ persist(build(clone(state || freshState()))); });
+  }
+
+  /* ---------- incoming state ---------- */
+  function onState(s){
+    var first = (state === null);
+    state = s || freshState();
+    state.players = state.players || [];
+    if (first){
+      state.players.forEach(function(p){ display[p.id] = p.pos; });
+      seenSeq = state.seq;
+      renderPanel();
+      if (!mine.length) openJoin();
+      return;
+    }
+    var act = state.last;
+    var isNew = state.seq > seenSeq && act && act.at && (Date.now() - act.at) < 30000;
+    seenSeq = state.seq;
+    state.players.forEach(function(p){
+      if (display[p.id] === undefined) display[p.id] = p.pos;
+    });
+    if (isNew && !animating){
+      display[act.playerId] = act.from;
+      renderPanel();
+      playAction(act);
+    } else if (!animating){
+      state.players.forEach(function(p){ display[p.id] = p.pos; });
+      renderPanel();
+    } else {
+      renderPanel();
+    }
+  }
+
+  /* ---------- confetti ---------- */
+  function celebrate(){
+    if (reduce) return;
+    var c = document.getElementById("confetti"), ctx = c.getContext("2d");
+    c.width = innerWidth; c.height = innerHeight;
+    var cols = [tone("felt"), tone("gold"), tone("biro"), tone("moss")];
+    var bits = [], i;
+    for (i=0;i<140;i++) bits.push({
+      x: Math.random()*c.width, y: -20 - Math.random()*c.height*0.6,
+      vy: 2 + Math.random()*3.6, vx: -1.2 + Math.random()*2.4,
+      s: 5 + Math.random()*7, r: Math.random()*Math.PI, vr: -0.13 + Math.random()*0.26,
+      col: cols[i % cols.length]
+    });
+    var t0 = performance.now();
+    (function frame(now){
+      ctx.clearRect(0,0,c.width,c.height);
+      bits.forEach(function(b){
+        b.x += b.vx; b.y += b.vy; b.r += b.vr;
+        ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.r);
+        ctx.fillStyle = b.col; ctx.fillRect(-b.s/2, -b.s/2, b.s, b.s*0.65); ctx.restore();
+      });
+      if (now - t0 < 4200) requestAnimationFrame(frame); else ctx.clearRect(0,0,c.width,c.height);
+    })(t0);
+  }
+
+  /* ---------- dialogs ---------- */
+  var joinDlg = document.getElementById("joinDlg");
+  var picked = PIECES[0];
+
+  function openJoin(){
+    var picker = document.getElementById("emojiPicker");
+    picker.textContent = "";
+    var taken = ((state && state.players) || []).map(function(p){ return p.emoji; });
+    var free = PIECES.filter(function(p){ return taken.indexOf(p.emoji) === -1; });
+    if (!free.length) free = PIECES.slice();
+    picked = free[0];
+    free.forEach(function(p){
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "pick"; b.textContent = p.emoji;
+      b.style.background = p.color + "22";
+      b.setAttribute("aria-pressed", p === picked ? "true" : "false");
+      b.setAttribute("aria-label", "Choose piece " + p.emoji);
+      b.addEventListener("click", function(){
+        picked = p;
+        Array.prototype.forEach.call(picker.children, function(k){ k.setAttribute("aria-pressed","false"); });
+        b.setAttribute("aria-pressed","true");
+      });
+      picker.appendChild(b);
+    });
+    if (typeof joinDlg.showModal === "function") joinDlg.showModal();
+    setTimeout(function(){ document.getElementById("nameIn").focus(); }, 30);
+  }
+
+  document.getElementById("joinForm").addEventListener("submit", function(ev){
+    var val = ev.submitter && ev.submitter.value;
+    var name = document.getElementById("nameIn").value.trim();
+    if (val === "join" && name){ addPlayer(name.slice(0,16), picked); document.getElementById("nameIn").value = ""; }
+  });
+
+  var rulesDlg = document.getElementById("rulesDlg");
+  document.getElementById("rulesBtn").addEventListener("click", function(){
+    var ul = document.getElementById("rulesList");
+    ul.textContent = "";
+    Object.keys(SPECIALS).map(Number).sort(function(a,b){ return a-b; }).forEach(function(n){
+      var li = document.createElement("li");
+      var sq = document.createElement("span"); sq.className = "sq"; sq.textContent = n;
+      var tx = document.createElement("span"); tx.textContent = SPECIALS[n].desc;
+      li.appendChild(sq); li.appendChild(tx); ul.appendChild(li);
+    });
+    var li2 = document.createElement("li");
+    li2.innerHTML = '<span class="sq">36</span><span>Finish — first one here wins.</span>';
+    ul.appendChild(li2);
+    if (typeof rulesDlg.showModal === "function") rulesDlg.showModal();
+  });
+  document.getElementById("rulesClose").addEventListener("click", function(){ rulesDlg.close(); });
+
+  document.getElementById("addBtn").addEventListener("click", openJoin);
+  document.getElementById("rollBtn").addEventListener("click", takeTurn);
+  document.getElementById("newBtn").addEventListener("click", function(){
+    if (!confirm("Start a brand new game? Everyone goes back to Start.")) return;
+    var s = clone(state || freshState());
+    s.players = (s.players || []).map(function(p){ p.pos = 0; p.done = false; p.rank = 0; return p; });
+    s.status = s.players.length ? "playing" : "lobby";
+    s.turn = 0; s.winner = null; s.last = null; s.seq++;
+    s.log = ["<b>New game.</b> Everyone back to Start."];
+    Object.keys(display).forEach(function(k){ display[k] = 0; });
+    persist(s);
+  });
+
+  /* ---------- boot ---------- */
+  drawBoard();
+  onState(null);
+  window.addEventListener("resize", function(){ drawTokens(); });
+  if (window.matchMedia){
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    var repaint = function(){ drawBoard(); drawTokens(); };
+    if (mq.addEventListener) mq.addEventListener("change", repaint);
+    else if (mq.addListener) mq.addListener(repaint);
+  }
+
+  if (window.claude && typeof window.claude.use === "function"){
+    window.claude.use("db").then(function(handle){
+      if (!handle) throw new Error("no db");
+      db = handle;
+      ref = db.doc("game/state");
+      note("");
+      ref.onSnapshot(function(snap){
+        if (!snap.exists){ if (!state || !state.players.length) onState(freshState()); return; }
+        onState(snap.data());
+      }, function(err){
+        note("Live sync stopped (" + err.code + "). Reload the page to reconnect.");
+      });
+    }).catch(function(){
+      ref = null;
+      var saved = null;
+      try { saved = JSON.parse(localStorage.getItem("castleroad.local") || "null"); } catch(e){}
+      if (saved) onState(saved);
+      note("Playing on this device only — the shared board isn’t available here.");
+    });
+
+    window.claude.use("room").then(function(r){
+      if (!r) return;
+      room = r;
+      room.onPeers(function(peers){
+        var next = {};
+        (peers || []).forEach(function(peer){
+          var data = peer && (peer.presence || peer.state || peer.data || peer);
+          var ids = data && data.pids;
+          if (ids && ids.length) ids.forEach(function(id){ next[id] = true; });
+        });
+        online = next;
+        if (!animating) renderPanel();
+      });
+      var beat = function(){ try { room.presence({pids: mine, at: Date.now()}); } catch(e){} };
+      beat();
+      setInterval(beat, 20000);
+    }).catch(function(){});
+  } else {
+    var saved2 = null;
+    try { saved2 = JSON.parse(localStorage.getItem("castleroad.local") || "null"); } catch(e){}
+    if (saved2) onState(saved2);
+    note("Playing on this device only.");
+  }
+})();
+</script>
