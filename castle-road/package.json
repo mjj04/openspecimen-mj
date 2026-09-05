@@ -1,0 +1,13 @@
+{
+  "name": "castle-road",
+  "version": "1.0.0",
+  "description": "A hand-drawn family board game, playable together over the internet.",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Castle Road — a hand-drawn family board game you can play together over the internet.">
+<meta name="theme-color" content="#F7F3E9">
+<title>Castle Road</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%8E%B2%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Karla:wght@400;600;700&display=swap">
+<style>
+  :root{
+    --paper:#F7F3E9; --paper-2:#FFFDF6; --rule:#D9D0BA; --pencil:#A79E88;
+    --ink:#1F2A44; --ink-soft:#5D6679; --biro:#2E4E96; --felt:#D23A2E;
+    --gold:#B98722; --moss:#3E7D53; --plum:#7A4A86;
+    --shadow:rgba(31,42,68,.16);
+    --font-hand:"Patrick Hand","Bradley Hand","Comic Sans MS",cursive;
+    --font-ui:"Karla","Helvetica Neue",Arial,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#161920; --paper-2:#1F242D; --rule:#333B49; --pencil:#79808F;
+      --ink:#EDE7D9; --ink-soft:#A2AAB8; --biro:#89AEFF; --felt:#FF6E5C;
+      --gold:#E4B75C; --moss:#6FC38D; --plum:#C08FD0; --shadow:rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#161920; --paper-2:#1F242D; --rule:#333B49; --pencil:#79808F;
+    --ink:#EDE7D9; --ink-soft:#A2AAB8; --biro:#89AEFF; --felt:#FF6E5C;
+    --gold:#E4B75C; --moss:#6FC38D; --plum:#C08FD0; --shadow:rgba(0,0,0,.55);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:var(--font-ui); font-size:15px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  img{max-width:100%}
+  .wrap{max-width:1340px; margin:0 auto; padding:18px 18px 40px}
+
+  header.top{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:14px}
+  h1{font-family:var(--font-hand); font-weight:400; margin:0; font-size:clamp(34px,5vw,52px); line-height:.95; letter-spacing:.5px; text-wrap:balance}
+  h1 .flag{color:var(--felt)}
+  .sub{margin:4px 0 0; color:var(--ink-soft); font-size:14px; max-width:54ch}
+  .top-actions{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+
+  button{font-family:var(--font-ui); font-size:14px; cursor:pointer}
+  .btn{
+    border:1.5px solid var(--ink); background:var(--paper-2); color:var(--ink);
+    padding:7px 13px; border-radius:9px 11px 10px 12px; font-weight:600;
+    box-shadow:1.5px 2px 0 var(--shadow); transition:transform .08s ease, box-shadow .08s ease;
+  }
+  .btn:hover{transform:translate(-1px,-1px); box-shadow:2.5px 3px 0 var(--shadow)}
+  .btn:active{transform:translate(1px,1px); box-shadow:0 0 0 var(--shadow)}
+  .btn:focus-visible{outline:2.5px solid var(--biro); outline-offset:2px}
+  .btn.quiet{border-color:var(--pencil); color:var(--ink-soft); box-shadow:none; background:transparent}
+  .btn.big{
+    font-size:19px; padding:14px 18px; width:100%; background:var(--felt); color:#fff;
+    border-color:#8E241B; font-family:var(--font-hand); letter-spacing:.6px;
+  }
+  .btn.big:disabled{background:transparent; color:var(--pencil); border-color:var(--rule); box-shadow:none; cursor:not-allowed; transform:none}
+
+  .roomchip{
+    display:inline-flex; align-items:center; gap:8px; font-family:var(--font-hand); font-size:20px;
+    border:1.5px dashed var(--pencil); border-radius:10px; padding:3px 11px; color:var(--ink);
+  }
+  .roomchip .code{letter-spacing:.16em; font-variant-numeric:tabular-nums}
+  .live{width:8px; height:8px; border-radius:50%; background:var(--rule)}
+  .live.on{background:var(--moss)}
+
+  main{display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:20px; align-items:start}
+  @media (max-width:980px){ main{grid-template-columns:minmax(0,1fr)} }
+
+  .sheet{
+    background:var(--paper-2); border:1px solid var(--rule); border-radius:4px;
+    box-shadow:0 10px 30px -18px var(--shadow), 0 1px 0 var(--rule);
+    padding:8px; position:relative; overflow:hidden;
+  }
+  .sheet::before{
+    content:""; position:absolute; inset:0; pointer-events:none; opacity:.35;
+    background:radial-gradient(120% 90% at 10% 0%, transparent 55%, var(--shadow) 160%);
+  }
+  svg#board{display:block; width:100%; height:auto}
+
+  .rail{display:flex; flex-direction:column; gap:14px; position:sticky; top:14px}
+  @media (max-width:980px){ .rail{position:static} }
+  .card{background:var(--paper-2); border:1px solid var(--rule); border-radius:3px; padding:13px 14px; box-shadow:0 8px 22px -18px var(--shadow)}
+  .card > h2{font-family:var(--font-ui); font-size:11px; letter-spacing:.13em; text-transform:uppercase; color:var(--pencil); margin:0 0 10px; font-weight:700}
+
+  .turn{font-family:var(--font-hand); font-size:26px; line-height:1.15; margin:0 0 10px}
+  .turn small{display:block; font-family:var(--font-ui); font-size:12.5px; color:var(--ink-soft)}
+
+  .dice{display:flex; gap:10px; justify-content:center; margin:2px 0 12px}
+  .die{width:52px; height:52px; border-radius:10px; border:2px solid var(--ink); background:var(--paper-2); box-shadow:2px 3px 0 var(--shadow)}
+  .die.rolling{animation:tumble .28s linear infinite}
+  @keyframes tumble{
+    0%{transform:rotate(0) translateY(0)} 25%{transform:rotate(9deg) translateY(-5px)}
+    50%{transform:rotate(-6deg) translateY(2px)} 75%{transform:rotate(5deg) translateY(-3px)} 100%{transform:rotate(0) translateY(0)}
+  }
+  .die circle{fill:var(--ink)}
+
+  ul.players{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:7px}
+  ul.players li{display:flex; align-items:center; gap:9px; padding:6px 8px; border-radius:8px; border:1.5px dashed transparent}
+  ul.players li.now{border-color:var(--ink); background:rgba(185,135,34,.14)}
+  ul.players li.done{opacity:.72}
+  .pawn{width:30px; height:30px; border-radius:50%; display:grid; place-items:center; font-size:16px; border:2px solid var(--ink); flex:0 0 auto; box-shadow:1.5px 2px 0 var(--shadow)}
+  .pname{font-weight:600; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .pname .you{font-weight:400; color:var(--pencil); font-size:12px}
+  .ppos{font-family:var(--font-hand); font-size:19px; color:var(--ink-soft); font-variant-numeric:tabular-nums}
+  .dot{width:7px; height:7px; border-radius:50%; background:var(--moss); flex:0 0 auto}
+  .dot.off{background:var(--rule)}
+
+  .log{
+    font-family:var(--font-hand); font-size:17px; line-height:26px; margin:0; list-style:none;
+    background:repeating-linear-gradient(to bottom, transparent 0 25px, var(--rule) 25px 26px);
+    background-attachment:local;
+    max-height:220px; overflow-y:auto;
+  }
+  .log li{padding:0 2px}
+  .log li b{color:var(--felt); font-weight:400}
+
+  footer.note{margin-top:20px; color:var(--pencil); font-size:12.5px; text-align:center}
+  footer.note a{color:var(--pencil)}
+
+  dialog{border:1px solid var(--rule); border-radius:6px; background:var(--paper-2); color:var(--ink); padding:0; max-width:440px; width:calc(100vw - 32px); box-shadow:0 24px 60px -20px var(--shadow)}
+  dialog::backdrop{background:rgba(20,22,28,.55)}
+  .dlg-in{padding:20px}
+  .dlg-in h3{font-family:var(--font-hand); font-size:28px; margin:0 0 4px; font-weight:400}
+  .dlg-in p{margin:0 0 14px; color:var(--ink-soft); font-size:13.5px}
+  label.fld{display:block; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--pencil); font-weight:700; margin-bottom:6px}
+  input[type=text]{width:100%; font-family:var(--font-hand); font-size:22px; padding:8px 10px; color:var(--ink); background:transparent; border:0; border-bottom:2px solid var(--ink); border-radius:0}
+  input[type=text]:focus{outline:none; border-bottom-color:var(--felt)}
+  input.code-in{letter-spacing:.24em; text-transform:uppercase}
+  .picker{display:flex; flex-wrap:wrap; gap:7px; margin-top:8px}
+  .pick{width:40px; height:40px; border-radius:50%; border:2px solid var(--rule); background:var(--paper); font-size:19px; display:grid; place-items:center; padding:0}
+  .pick[aria-pressed="true"]{border-color:var(--ink); box-shadow:0 0 0 3px rgba(185,135,34,.45)}
+  .dlg-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:18px; flex-wrap:wrap}
+  .rules{margin:0; padding:0; list-style:none; font-size:13.5px; display:flex; flex-direction:column; gap:8px; max-height:52vh; overflow-y:auto}
+  .rules li{display:flex; gap:10px; align-items:baseline}
+  .rules .sq{font-family:var(--font-hand); font-size:16px; min-width:34px; text-align:center; padding:1px 4px; border:1.5px solid var(--ink); border-radius:5px; flex:0 0 auto}
+  .banner{display:none; font-family:var(--font-hand); font-size:22px; text-align:center; padding:10px; border:2px dashed var(--felt); border-radius:10px; color:var(--felt); margin-bottom:12px}
+  .banner.show{display:block}
+  #confetti{position:fixed; inset:0; pointer-events:none; z-index:50}
+  .msg{font-size:12px; color:var(--pencil); text-align:center; margin:8px 0 0; min-height:1.2em}
+  .msg.warn{color:var(--felt)}
+  .invite{display:flex; gap:8px; margin-top:12px}
+  .invite input{font-family:var(--font-ui); font-size:13px; flex:1; min-width:0; border:1px solid var(--rule); border-radius:6px; padding:7px 9px; background:var(--paper); color:var(--ink-soft)}
+  @media (prefers-reduced-motion: reduce){ .die.rolling{animation:none} .btn{transition:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Castle&nbsp;Road <span class="flag">&#9873;</span></h1>
+      <p class="sub">A hand-drawn board game, brought online. Share the link, everyone sees the same board.</p>
+    </div>
+    <div class="top-actions">
+      <span class="roomchip" title="This game's code">
+        <span class="live" id="liveDot"></span><span class="code" id="roomCode">&mdash;&mdash;&mdash;&mdash;</span>
+      </span>
+      <button class="btn" id="inviteBtn">Invite</button>
+      <button class="btn quiet" id="rulesBtn">Rules</button>
+      <button class="btn quiet" id="addBtn">Add player</button>
+      <button class="btn quiet" id="newBtn">New game</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="sheet">
+      <svg id="board" viewBox="0 0 1200 900" role="img" aria-label="The Castle Road board: a winding track of 35 spaces from Start to Finish">
+        <defs>
+          <filter id="wobble" x="-6%" y="-6%" width="112%" height="112%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.014" numOctaves="2" seed="11" result="noise"/>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+          </filter>
+          <filter id="pawnShadow" x="-40%" y="-40%" width="180%" height="180%">
+            <feDropShadow dx="2" dy="3" stdDeviation="2" flood-opacity="0.35"/>
+          </filter>
+        </defs>
+        <g id="roadLayer" filter="url(#wobble)">
+          <path id="roadInk" fill="none" stroke-linecap="round"></path>
+          <path id="roadFill" fill="none" stroke-linecap="round"></path>
+          <g id="dividers"></g>
+        </g>
+        <g id="marks"></g>
+        <g id="numbers"></g>
+        <g id="tokens"></g>
+      </svg>
+    </section>
+
+    <aside class="rail">
+      <div class="card">
+        <div class="banner" id="banner"></div>
+        <p class="turn" id="turnLine">Connecting&hellip;<small id="turnSub">&nbsp;</small></p>
+        <div class="dice" id="diceBox">
+          <svg class="die" id="die1" viewBox="0 0 100 100"></svg>
+          <svg class="die" id="die2" viewBox="0 0 100 100"></svg>
+        </div>
+        <button class="btn big" id="rollBtn" disabled>Roll the dice</button>
+        <p class="msg" id="msg"></p>
+      </div>
+
+      <div class="card">
+        <h2>Who&rsquo;s playing</h2>
+        <ul class="players" id="playerList"></ul>
+      </div>
+
+      <div class="card">
+        <h2>What happened</h2>
+        <ul class="log" id="log"></ul>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="note">Start &rarr; 35 spaces &rarr; Finish. Drawn on paper first.</footer>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<dialog id="landingDlg">
+  <div class="dlg-in">
+    <h3>Castle Road</h3>
+    <p>Start a game and send the link to whoever you&rsquo;re playing with, or type in a code you were given.</p>
+    <div class="dlg-actions" style="justify-content:flex-start">
+      <button class="btn" id="createBtn">Start a new game</button>
+    </div>
+    <form id="codeForm" style="margin-top:18px">
+      <label class="fld" for="codeIn">Or join with a code</label>
+      <input type="text" id="codeIn" class="code-in" maxlength="6" autocomplete="off" placeholder="ABCD" inputmode="latin" required>
+      <div class="dlg-actions"><button class="btn" type="submit">Join that game</button></div>
+    </form>
+  </div>
+</dialog>
+
+<dialog id="joinDlg">
+  <form method="dialog" class="dlg-in" id="joinForm">
+    <h3>Take a seat</h3>
+    <p>Pick a name and a piece. Everyone on this link plays the same board.</p>
+    <label class="fld" for="nameIn">Your name</label>
+    <input type="text" id="nameIn" maxlength="16" autocomplete="off" placeholder="Grandpa" required>
+    <div class="picker" id="emojiPicker"></div>
+    <div class="dlg-actions">
+      <button class="btn quiet" value="cancel" formnovalidate type="submit">Just watch</button>
+      <button class="btn" id="joinGo" value="join" type="submit">Join the game</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="inviteDlg">
+  <div class="dlg-in">
+    <h3>Invite someone</h3>
+    <p>Send them this link. No account, no app &mdash; it opens straight into your game.</p>
+    <div class="invite">
+      <input type="text" id="inviteLink" readonly>
+      <button class="btn" id="copyBtn">Copy</button>
+    </div>
+    <p class="msg" id="copyMsg"></p>
+    <div class="dlg-actions"><button class="btn quiet" id="inviteClose">Close</button></div>
+  </div>
+</dialog>
+
+<dialog id="rulesDlg">
+  <div class="dlg-in">
+    <h3>How to play</h3>
+    <p>Roll two dice, move that many spaces, then do what your space says. First piece to the Finish wins &mdash; no exact roll needed.</p>
+    <ul class="rules" id="rulesList"></ul>
+    <div class="dlg-actions"><button class="btn" id="rulesClose">Got it</button></div>
+  </div>
+</dialog>
+
+<script src="game-rules.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

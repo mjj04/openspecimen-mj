@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: castle-road
+    runtime: node
+    plan: free
+    rootDir: castle-road
+    buildCommand: ""
+    startCommand: node server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
