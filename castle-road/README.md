@@ -39,12 +39,18 @@ Any host that runs Node works. The service needs no database and no build step �
 **Render** (free tier, from this repo):
 
 1. render.com → **New → Web Service** → connect this repository.
-2. Root directory `castle-road`, build command empty, start command `node server.js`.
+2. Branch `claude/digital-board-game-online-k7pdnp` (the game is not on `master`),
+   root directory `castle-road`, build command `npm install`, start command
+   `node server.js`, instance type Free.
 3. Deploy. You get a `https://something.onrender.com` URL — that's the game.
 
 (Or move `render.yaml` to the repository root and use **New → Blueprint** instead.)
-Free instances sleep when idle, so the first load after a quiet spell takes a few
-seconds to wake up. Games survive that; see persistence below.
+Free instances sleep after about 15 minutes with nobody on them, and the first
+load after that takes ~30 seconds to wake. A free instance also comes back with
+an empty filesystem, so a game in progress does not survive a sleep or a
+redeploy — during an actual game people are on the page, so it stays awake;
+between sessions you just start a new game. If you want games to outlive a
+restart, attach a persistent disk mounted at the `DATA_FILE` directory.
 
 **Fly.io**: `fly launch` in `castle-road/` picks up the Dockerfile; add a volume
 mounted at `/app/data` if you want games to survive a restart.
@@ -64,8 +70,9 @@ mounted at `/app/data` if you want games to survive a restart.
 - One browser can hold several seats ("Add player"), so two people on the sofa
   can share a screen while everyone else is on their own.
 - Rooms are kept in memory and written to `data/rooms.json` every few seconds,
-  so a restart or a free-tier sleep doesn't lose a game. Set `DATA_FILE` to move
-  that file. Rooms nobody has opened for 24 hours are cleared out.
+  so a restart doesn't lose a game — as long as that file is on a disk that
+  survives the restart. Set `DATA_FILE` to move it. Rooms nobody has opened for
+  24 hours are cleared out.
 
 ## The rules, as implemented
 
